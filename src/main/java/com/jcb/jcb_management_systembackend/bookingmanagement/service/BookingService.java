@@ -1,11 +1,11 @@
 package com.jcb.jcb_management_systembackend.bookingmanagement.service;
 
 import com.jcb.jcb_management_systembackend.bookingmanagement.model.Booking;
-import com.jcb.jcb_management_systembackend.bookingmanagement.model.Customer;
-import com.jcb.jcb_management_systembackend.bookingmanagement.model.JCB;
+import com.jcb.jcb_management_systembackend.usermanagement.model.Customer;
+import com.jcb.jcb_management_systembackend.jcbmanagement.model.JCB;
 import com.jcb.jcb_management_systembackend.bookingmanagement.repository.BookingRepository;
-import com.jcb.jcb_management_systembackend.bookingmanagement.repository.JCBRepository;
-import com.jcb.jcb_management_systembackend.bookingmanagement.repository.CustomerRepository;
+import com.jcb.jcb_management_systembackend.jcbmanagement.repository.JCBRepository;
+import com.jcb.jcb_management_systembackend.usermanagement.repository.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +27,7 @@ public class BookingService {
     private CustomerRepository customerRepository;
 
     @Transactional
-    public String createBooking(String customerId, String jcbType, String nic, String periodOfUse) {
+    public String createBooking(Long customerId, String jcbType, String nic, String periodOfUse) {
         // Find the customer
         Optional<Customer> customerOpt = customerRepository.findById(customerId);
         if (!customerOpt.isPresent()) {
@@ -62,7 +62,6 @@ public class BookingService {
         return "Success: Booking created for JCB " + selectedJCB.getRegisteredNumber() + " (Type: " + jcbType + ", Price: " + selectedJCB.getRentalPrice() + ")";
     }
 
-    // Method to get available JCBs for display in UI
     public List<JCB> getAvailableJCBs() {
         return jcbRepository.findByIsAvailableTrue();
     }

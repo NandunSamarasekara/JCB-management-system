@@ -1,14 +1,15 @@
-package com.jcb.jcb_management_systembackend.bookingmanagement.model;
+package com.jcb.jcb_management_systembackend.usermanagement.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
-public class Customer {
+@Table(name = "Owner")
+public class Owner {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @NotNull(message = "First name cannot be null")
     private String firstName;
@@ -23,14 +24,11 @@ public class Customer {
     @NotNull(message = "Password cannot be null")
     private String password;
 
-    @NotNull(message = "Role cannot be null")
-    private String role = "CUSTOMER";
-
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -64,13 +62,5 @@ public class Customer {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
     }
 }

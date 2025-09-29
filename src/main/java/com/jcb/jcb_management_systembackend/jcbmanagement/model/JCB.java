@@ -1,16 +1,18 @@
-package com.jcb.jcb_management_systembackend.bookingmanagement.model;
+package com.jcb.jcb_management_systembackend.jcbmanagement.model;
 
+import com.jcb.jcb_management_systembackend.bookingmanagement.model.Booking;
+import com.jcb.jcb_management_systembackend.usermanagement.model.Owner;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
-import java.util.UUID;
 
 @Entity
+@Table(name = "JCB")
 public class JCB {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @NotNull(message = "Registered number cannot be null")
     private String registeredNumber;
@@ -24,17 +26,21 @@ public class JCB {
     @NotNull(message = "Rental price cannot be null")
     private double rentalPrice;
 
-    @NotNull(message = "Engine number cannot be null")
+    @NotNull(message = "Availability cannot be null")
     private boolean isAvailable = true;
+
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private Owner owner;
 
     @OneToMany(mappedBy = "jcb")
     private List<Booking> bookings;
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -76,6 +82,14 @@ public class JCB {
 
     public void setAvailable(boolean available) {
         this.isAvailable = available;
+    }
+
+    public Owner getOwner() {
+        return owner;
+    }
+
+    public void setOwner(Owner owner) {
+        this.owner = owner;
     }
 
     public List<Booking> getBookings() {

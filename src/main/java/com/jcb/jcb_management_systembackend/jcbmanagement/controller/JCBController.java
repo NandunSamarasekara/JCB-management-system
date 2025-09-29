@@ -1,6 +1,6 @@
-package com.jcb.jcb_management_systembackend.bookingmanagement.controller;
+package com.jcb.jcb_management_systembackend.jcbmanagement.controller;
 
-import com.jcb.jcb_management_systembackend.bookingmanagement.model.JCB;
+import com.jcb.jcb_management_systembackend.jcbmanagement.model.JCB;
 import com.jcb.jcb_management_systembackend.bookingmanagement.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

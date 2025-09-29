@@ -1,16 +1,18 @@
 package com.jcb.jcb_management_systembackend.bookingmanagement.model;
 
+import com.jcb.jcb_management_systembackend.jcbmanagement.model.JCB;
+import com.jcb.jcb_management_systembackend.usermanagement.model.Customer;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.Date;
-import java.util.UUID;
 
 @Entity
+@Table(name = "bookings")
 public class Booking {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "customer_id")
@@ -30,11 +32,11 @@ public class Booking {
 
     private Date createdAt;
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
