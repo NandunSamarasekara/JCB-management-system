@@ -2,6 +2,7 @@ package com.jcb.jcb_management_systembackend.bookingmanagement.model;
 
 import com.jcb.jcb_management_systembackend.jcbmanagement.model.JCB;
 import com.jcb.jcb_management_systembackend.usermanagement.model.Customer;
+import com.jcb.jcb_management_systembackend.usermanagement.model.Driver;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
@@ -21,6 +22,10 @@ public class Booking {
     @ManyToOne
     @JoinColumn(name = "jcb_id")
     private JCB jcb;
+
+    @ManyToOne
+    @JoinColumn(name = "driver_id")
+    private Driver driver;
 
     @NotNull(message = "National Identity Card cannot be null")
     private String nic;
@@ -54,6 +59,14 @@ public class Booking {
 
     public void setJcb(JCB jcb) {
         this.jcb = jcb;
+    }
+
+    public Driver getDriver() {
+        return driver;
+    }
+
+    public void setDriver(Driver driver) {
+        this.driver = driver;
     }
 
     public String getNic() {

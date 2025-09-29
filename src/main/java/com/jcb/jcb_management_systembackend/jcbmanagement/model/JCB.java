@@ -8,13 +8,11 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 @Entity
-@Table(name = "JCB")
+@Table(name = "jcb")
 public class JCB {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
     @NotNull(message = "Registered number cannot be null")
+    @Column(name = "registered_number")
     private String registeredNumber;
 
     @NotNull(message = "Engine number cannot be null")
@@ -27,7 +25,8 @@ public class JCB {
     private double rentalPrice;
 
     @NotNull(message = "Availability cannot be null")
-    private boolean isAvailable = true;
+    @Column(name = "is_available", columnDefinition = "BIT(1) DEFAULT 1")
+    private boolean isAvailable; //Database saves it in bit
 
     @ManyToOne
     @JoinColumn(name = "owner_id")
@@ -35,14 +34,6 @@ public class JCB {
 
     @OneToMany(mappedBy = "jcb")
     private List<Booking> bookings;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getRegisteredNumber() {
         return registeredNumber;

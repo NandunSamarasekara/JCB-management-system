@@ -26,16 +26,77 @@ public class CustomerController {
     }
 
     @PostMapping("/book")
-    public ResponseEntity<String> bookJCB(
-            @RequestParam Long customerId,
-            @RequestParam String jcbType,
-            @RequestParam String nic,
-            @RequestParam String periodOfUse) {
-        String result = bookingService.createBooking(customerId, jcbType, nic, periodOfUse);
+    public ResponseEntity<String> bookJCB(@RequestBody BookJCBRequest request) {
+        String result = bookingService.createBooking(
+                request.getCustomerId(),
+                request.getJcbType(),
+                request.getNic(),
+                request.getPeriodOfUse(),
+                request.getRegisteredNumber(),
+                request.getDriverId()
+        );
         if (result.startsWith("Success")) {
             return ResponseEntity.ok(result);
         } else {
             return ResponseEntity.badRequest().body(result);
+        }
+    }
+
+    // DTO for request body
+    public static class BookJCBRequest {
+        private Long customerId;
+        private String jcbType;
+        private String nic;
+        private String periodOfUse;
+        private String registeredNumber;
+        private Long driverId;
+
+        public Long getCustomerId() {
+            return customerId;
+        }
+
+        public void setCustomerId(Long customerId) {
+            this.customerId = customerId;
+        }
+
+        public String getJcbType() {
+            return jcbType;
+        }
+
+        public void setJcbType(String jcbType) {
+            this.jcbType = jcbType;
+        }
+
+        public String getNic() {
+            return nic;
+        }
+
+        public void setNic(String nic) {
+            this.nic = nic;
+        }
+
+        public String getPeriodOfUse() {
+            return periodOfUse;
+        }
+
+        public void setPeriodOfUse(String periodOfUse) {
+            this.periodOfUse = periodOfUse;
+        }
+
+        public String getRegisteredNumber() {
+            return registeredNumber;
+        }
+
+        public void setRegisteredNumber(String registeredNumber) {
+            this.registeredNumber = registeredNumber;
+        }
+
+        public Long getDriverId() {
+            return driverId;
+        }
+
+        public void setDriverId(Long driverId) {
+            this.driverId = driverId;
         }
     }
 }

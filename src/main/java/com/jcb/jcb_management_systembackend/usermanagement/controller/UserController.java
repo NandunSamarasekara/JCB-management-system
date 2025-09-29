@@ -1,13 +1,10 @@
 package com.jcb.jcb_management_systembackend.usermanagement.controller;
 
-import com.jcb.jcb_management_systembackend.usermanagement.model.User;
 import com.jcb.jcb_management_systembackend.usermanagement.model.UserRole;
 import com.jcb.jcb_management_systembackend.usermanagement.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
@@ -17,13 +14,14 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<String> registerUser(
-            @RequestParam String firstName,
-            @RequestParam String lastName,
-            @RequestParam String email,
-            @RequestParam String password,
-            @RequestParam UserRole role) {
-        String result = userService.registerUser(firstName, lastName, email, password, role);
+    public ResponseEntity<String> registerUser(@RequestBody RegisterUserRequest request) {
+        String result = userService.registerUser(
+                request.getFirstName(),
+                request.getLastName(),
+                request.getEmail(),
+                request.getPassword(),
+                request.getRole()
+        );
         if (result.startsWith("Success")) {
             return ResponseEntity.ok(result);
         } else {
@@ -31,41 +29,52 @@ public class UserController {
         }
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> loginUser(
-            @RequestParam String email,
-            @RequestParam String password) {
-        Optional<User> userOpt = userService.loginUser(email, password);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            return ResponseEntity.ok(new LoginResponse(user.getId(), user.getEmail(), user.getRole()));
-        } else {
-            return ResponseEntity.badRequest().body("Error: Invalid email or password");
-        }
-    }
-
-    // Inner class for login response
-    static class LoginResponse {
-        private Long id;
+    // DTO for request body
+    public static class RegisterUserRequest {
+        private String firstName;
+        private String lastName;
         private String email;
+        private String password;
         private UserRole role;
 
-        public LoginResponse(Long id, String email, UserRole role) {
-            this.id = id;
-            this.email = email;
-            this.role = role;
+        public String getFirstName() {
+            return firstName;
         }
 
-        public Long getId() {
-            return id;
+        public void setFirstName(String firstName) {
+            this.firstName = firstName;
+        }
+
+        public String getLastName() {
+            return lastName;
+        }
+
+        public void setLastName(String lastName) {
+            this.lastName = lastName;
         }
 
         public String getEmail() {
             return email;
         }
 
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+
         public UserRole getRole() {
             return role;
+        }
+
+        public void setRole(UserRole role) {
+            this.role = role;
         }
     }
 }
