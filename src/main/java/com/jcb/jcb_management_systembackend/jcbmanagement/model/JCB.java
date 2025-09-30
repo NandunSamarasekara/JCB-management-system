@@ -16,6 +16,7 @@ public class JCB {
     private String registeredNumber;
 
     @NotNull(message = "Engine number cannot be null")
+    @Column(unique = true)
     private String engineNumber;
 
     @NotNull(message = "JCB type cannot be null")
@@ -25,11 +26,11 @@ public class JCB {
     private double rentalPrice;
 
     @NotNull(message = "Availability cannot be null")
-    @Column(name = "is_available", columnDefinition = "BIT(1) DEFAULT 1")
-    private boolean isAvailable; //Database saves it in bit
+    @Column(name = "is_available", columnDefinition = "TINYINT DEFAULT 1")
+    private Boolean isAvailable;
 
     @ManyToOne
-    @JoinColumn(name = "owner_id")
+    @JoinColumn(name = "owner_nic")
     private Owner owner;
 
     @OneToMany(mappedBy = "jcb")
@@ -67,12 +68,12 @@ public class JCB {
         this.rentalPrice = rentalPrice;
     }
 
-    public boolean isAvailable() {
+    public Boolean isAvailable() {
         return isAvailable;
     }
 
-    public void setAvailable(boolean available) {
-        this.isAvailable = available;
+    public void setAvailable(Boolean isAvailable) {
+        this.isAvailable = isAvailable;
     }
 
     public Owner getOwner() {
@@ -89,5 +90,12 @@ public class JCB {
 
     public void setBookings(List<Booking> bookings) {
         this.bookings = bookings;
+    }
+
+    @PrePersist
+    public void prePersist() {
+        if (isAvailable == null) {
+            isAvailable = true;
+        }
     }
 }

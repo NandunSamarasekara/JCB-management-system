@@ -1,19 +1,23 @@
 package com.jcb.jcb_management_systembackend.usermanagement.model;
 
+import com.jcb.jcb_management_systembackend.jcbmanagement.model.JCB;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 
+import java.util.List;
+
 @Entity
-@Table(name = "Owner")
+@Table(name = "owner")
 public class Owner {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @NotNull(message = "NIC cannot be null")
+    private String nic;
 
     @NotNull(message = "First name cannot be null")
     private String firstName;
 
+    @NotNull(message = "Last name cannot be null")
     private String lastName;
 
     @NotNull(message = "Email cannot be null")
@@ -24,12 +28,15 @@ public class Owner {
     @NotNull(message = "Password cannot be null")
     private String password;
 
-    public Long getId() {
-        return id;
+    @OneToMany(mappedBy = "owner")
+    private List<JCB> jcbs;
+
+    public String getNic() {
+        return nic;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setNic(String nic) {
+        this.nic = nic;
     }
 
     public String getFirstName() {
@@ -62,5 +69,13 @@ public class Owner {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public List<JCB> getJcbs() {
+        return jcbs;
+    }
+
+    public void setJcbs(List<JCB> jcbs) {
+        this.jcbs = jcbs;
     }
 }

@@ -2,16 +2,17 @@ package com.jcb.jcb_management_systembackend.usermanagement.model;
 
 import com.jcb.jcb_management_systembackend.bookingmanagement.model.Booking;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
 @Entity
-@Table(name = "drivers")
+@Table(name = "driver")
 public class Driver {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @NotNull(message = "NIC cannot be null")
+    private String nic;
 
     @NotNull(message = "First name cannot be null")
     private String firstName;
@@ -20,24 +21,26 @@ public class Driver {
     private String lastName;
 
     @NotNull(message = "Email cannot be null")
+    @Email(message = "Email should be valid")
+    @Column(unique = true)
     private String email;
 
     @NotNull(message = "Password cannot be null")
     private String password;
 
     @NotNull(message = "Availability cannot be null")
-    @Column(name = "is_available", columnDefinition = "BIT(1) DEFAULT 1")
-    private boolean isAvailable = true;
+    @Column(name = "is_available", columnDefinition = "TINYINT DEFAULT 1")
+    private Boolean isAvailable;
 
     @OneToMany(mappedBy = "driver")
     private List<Booking> bookings;
 
-    public Long getId() {
-        return id;
+    public String getNic() {
+        return nic;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setNic(String nic) {
+        this.nic = nic;
     }
 
     public String getFirstName() {
@@ -72,11 +75,11 @@ public class Driver {
         this.password = password;
     }
 
-    public boolean isAvailable() {
+    public Boolean isAvailable() {
         return isAvailable;
     }
 
-    public void setAvailable(boolean isAvailable) {
+    public void setAvailable(Boolean isAvailable) {
         this.isAvailable = isAvailable;
     }
 
@@ -86,5 +89,12 @@ public class Driver {
 
     public void setBookings(List<Booking> bookings) {
         this.bookings = bookings;
+    }
+
+    @PrePersist
+    public void prePersist() {
+        if (isAvailable == null) {
+            isAvailable = true;
+        }
     }
 }

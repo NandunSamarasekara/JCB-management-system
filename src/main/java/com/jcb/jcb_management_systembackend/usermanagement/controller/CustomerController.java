@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -28,12 +29,12 @@ public class CustomerController {
     @PostMapping("/book")
     public ResponseEntity<String> bookJCB(@RequestBody BookJCBRequest request) {
         String result = bookingService.createBooking(
-                request.getCustomerId(),
+                request.getCustomerNic(),
                 request.getJcbType(),
-                request.getNic(),
-                request.getPeriodOfUse(),
-                request.getRegisteredNumber(),
-                request.getDriverId()
+                request.getRentalDate(),
+                request.getReturnDate(),
+                request.isAcceptPrice(),
+                request.isAcceptTerms()
         );
         if (result.startsWith("Success")) {
             return ResponseEntity.ok(result);
@@ -44,19 +45,19 @@ public class CustomerController {
 
     // DTO for request body
     public static class BookJCBRequest {
-        private Long customerId;
+        private String customerNic;
         private String jcbType;
-        private String nic;
-        private String periodOfUse;
-        private String registeredNumber;
-        private Long driverId;
+        private Date rentalDate;
+        private Date returnDate;
+        private boolean acceptPrice;
+        private boolean acceptTerms;
 
-        public Long getCustomerId() {
-            return customerId;
+        public String getCustomerNic() {
+            return customerNic;
         }
 
-        public void setCustomerId(Long customerId) {
-            this.customerId = customerId;
+        public void setCustomerNic(String customerNic) {
+            this.customerNic = customerNic;
         }
 
         public String getJcbType() {
@@ -67,36 +68,36 @@ public class CustomerController {
             this.jcbType = jcbType;
         }
 
-        public String getNic() {
-            return nic;
+        public Date getRentalDate() {
+            return rentalDate;
         }
 
-        public void setNic(String nic) {
-            this.nic = nic;
+        public void setRentalDate(Date rentalDate) {
+            this.rentalDate = rentalDate;
         }
 
-        public String getPeriodOfUse() {
-            return periodOfUse;
+        public Date getReturnDate() {
+            return returnDate;
         }
 
-        public void setPeriodOfUse(String periodOfUse) {
-            this.periodOfUse = periodOfUse;
+        public void setReturnDate(Date returnDate) {
+            this.returnDate = returnDate;
         }
 
-        public String getRegisteredNumber() {
-            return registeredNumber;
+        public boolean isAcceptPrice() {
+            return acceptPrice;
         }
 
-        public void setRegisteredNumber(String registeredNumber) {
-            this.registeredNumber = registeredNumber;
+        public void setAcceptPrice(boolean acceptPrice) {
+            this.acceptPrice = acceptPrice;
         }
 
-        public Long getDriverId() {
-            return driverId;
+        public boolean isAcceptTerms() {
+            return acceptTerms;
         }
 
-        public void setDriverId(Long driverId) {
-            this.driverId = driverId;
+        public void setAcceptTerms(boolean acceptTerms) {
+            this.acceptTerms = acceptTerms;
         }
     }
 }

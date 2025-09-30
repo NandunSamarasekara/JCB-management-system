@@ -32,67 +32,62 @@ public class BookingService {
     private DriverRepository driverRepository;
 
     @Transactional
-    public String createBooking(Long customerId, String jcbType, String nic, String periodOfUse, String registeredNumber, Long driverId) {
+    public String createBooking(String customerNic, String jcbType, Date rentalDate, Date returnDate, boolean acceptPrice, boolean acceptTerms) {
+        // Validate form inputs
+        if (!acceptPrice || !acceptTerms) {
+            return "Error: Price and terms must be accepted";
+        }
+        if (rentalDate == null || returnDate == null || rentalDate.after(returnDate)) {
+            return "Error: Invalid rental or return date";
+        }
+
         // Find the customer
-        Optional<Customer> customerOpt = customerRepository.findById(customerId);
+        Optional<Customer> customerOpt = customerRepository.findById(customerNic);
         if (!customerOpt.isPresent()) {
-            return "Error: Customer not found";
+            return "Error: Customer with NIC " + customerNic + " not found";
         }
         Customer customer = customerOpt.get();
 
-        // Find the specified JCB by registeredNumber
-        Optional<JCB> jcbOpt = jcbRepository.findById(registeredNumber);
-        if (!jcbOpt.isPresent()) {
-            return "Error: JCB with registered number " + registeredNumber + " not found";
+        // Find an available JCB of the specified type
+        List<JCB> availableJcbs = jcbRepository.findByJcbTypeAndIsAvailableTrue(jcbType);
+        if (availableJcbs.isEmpty()) {
+            return "Error: No available JCBs of type " + jcbType;
         }
-        JCB selectedJCB = jcbOpt.get();
+        JCB selectedJcb = availableJcbs.get(0); // Select the first available JCB
 
-        // Verify JCB type and availability
-        if (!selectedJCB.getJcbType().equals(jcbType)) {
-            return "Error: JCB " + registeredNumber + " is not of type " + jcbType;
+        // Find an available driver
+        List<Driver> availableDrivers = driverRepository.findByIsAvailableTrue();
+        if (availableDrivers.isEmpty()) {
+            return "Error: No available drivers found";
         }
-        if (!selectedJCB.isAvailable()) {
-            return "Error: JCB " + registeredNumber + " is not available";
-        }
-
-        // Find or assign a driver
-        Driver selectedDriver;
-        if (driverId != null) {
-            Optional<Driver> driverOpt = driverRepository.findById(driverId);
-            if (!driverOpt.isPresent()) {
-                return "Error: Driver with ID " + driverId + " not found";
-            }
-            selectedDriver = driverOpt.get();
-            if (!selectedDriver.isAvailable()) {
-                return "Error: Driver with ID " + driverId + " is not available";
-            }
-        } else {
-            List<Driver> availableDrivers = driverRepository.findByIsAvailableTrue();
-            if (availableDrivers.isEmpty()) {
-                return "Error: No available drivers found";
-            }
-            selectedDriver = availableDrivers.get(0); // Select the first available driver
-        }
+        Driver selectedDriver = availableDrivers.get(0); // Select the first available driver
 
         // Create a new booking
         Booking booking = new Booking();
+        booking.setCustomerId(customerNic);
+        booking.setCustomerEmail(customer.getEmail());
+        booking.setJcbId(selectedJcb.getRegisteredNumber());
+        booking.setOwnerId(selectedJcb.getOwner().getNic());
+        booking.setOwnerEmail(selectedJcb.getOwner().getEmail());
+        booking.setDriverId(selectedDriver.getNic());
+        booking.setDriverEmail(selectedDriver.getEmail());
+        booking.setRentalDate(rentalDate);
+        booking.setReturnDate(returnDate);
         booking.setCustomer(customer);
-        booking.setJcb(selectedJCB);
+        booking.setJcb(selectedJcb);
         booking.setDriver(selectedDriver);
-        booking.setNic(nic);
-        booking.setPeriodOfUse(periodOfUse);
-        booking.setCreatedAt(new Date());
+        booking.setOwner(selectedJcb.getOwner());
 
         // Mark the JCB and driver as unavailable
-        selectedJCB.setAvailable(false);
+        selectedJcb.setAvailable(false);
         selectedDriver.setAvailable(false);
-        jcbRepository.save(selectedJCB);
+        jcbRepository.save(selectedJcb);
         driverRepository.save(selectedDriver);
 
         // Save the booking
         bookingRepository.save(booking);
 
-        return "Success: Booking created for JCB " + selectedJCB.getRegisteredNumber() + " (Type: " + jcbType + ", Price: " + selectedJCB.getRentalPrice() + ") with Driver ID: " + selectedDriver.getId();
+        return "Success: Booking created for JCB " + selectedJcb.getRegisteredNumber() + " (Type: " + jcbType + ", Price: " + selectedJcb.getRentalPrice() + ") with Driver NIC: " + selectedDriver.getNic();
     }
 
     public List<JCB> getAvailableJCBs() {

@@ -33,9 +33,9 @@ public class JCBController {
     @PostMapping
     public ResponseEntity<String> addJCB(@RequestBody AddJCBRequest request) {
         System.out.println("Received isAvailable: " + request.getIsAvailable()); // Debug log
-        Optional<Owner> ownerOpt = ownerRepository.findById(request.getOwnerId());
+        Optional<Owner> ownerOpt = ownerRepository.findById(request.getOwnerNic());
         if (!ownerOpt.isPresent()) {
-            return ResponseEntity.badRequest().body("Error: Owner not found");
+            return ResponseEntity.badRequest().body("Error: Owner with NIC " + request.getOwnerNic() + " not found");
         }
 
         // Check if registeredNumber already exists
@@ -63,7 +63,7 @@ public class JCBController {
         private String jcbType;
         private double rentalPrice;
         private Boolean isAvailable;
-        private Long ownerId;
+        private String ownerNic;
 
         public String getRegisteredNumber() {
             return registeredNumber;
@@ -105,12 +105,12 @@ public class JCBController {
             this.isAvailable = isAvailable;
         }
 
-        public Long getOwnerId() {
-            return ownerId;
+        public String getOwnerNic() {
+            return ownerNic;
         }
 
-        public void setOwnerId(Long ownerId) {
-            this.ownerId = ownerId;
+        public void setOwnerNic(String ownerNic) {
+            this.ownerNic = ownerNic;
         }
     }
 }
