@@ -13,10 +13,16 @@ import com.jcb.jcb_management_systembackend.usermanagement.repository.AdminRepos
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMethod;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 // Updated to use existsByEmail and singular table names
 @RestController
 @RequestMapping("/api/users")
+@CrossOrigin(origins = "http://localhost:5173", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class UserController {
 
     @Autowired
@@ -130,6 +136,63 @@ public class UserController {
         }
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, String>> loginUser(@RequestBody LoginRequest request) {
+        String role = request.getRole().toUpperCase();
+        boolean found = false;
+        String nic = "";
+        switch (role) {
+            case "CUSTOMER":
+                Optional<Customer> customerOpt = customerRepository.findByEmail(request.getEmail());
+                if (customerOpt.isPresent() && customerOpt.get().getPassword().equals(request.getPassword())) {
+                    found = true;
+                    nic = customerOpt.get().getNic();
+                }
+                break;
+            case "OWNER":
+                Optional<Owner> ownerOpt = ownerRepository.findByEmail(request.getEmail());
+                if (ownerOpt.isPresent() && ownerOpt.get().getPassword().equals(request.getPassword())) {
+                    found = true;
+                    nic = ownerOpt.get().getNic();
+                }
+                break;
+            case "DRIVER":
+                Optional<Driver> driverOpt = driverRepository.findByEmail(request.getEmail());
+                if (driverOpt.isPresent() && driverOpt.get().getPassword().equals(request.getPassword())) {
+                    found = true;
+                    nic = driverOpt.get().getNic();
+                }
+                break;
+            case "MECHANIC":
+                Optional<Mechanic> mechanicOpt = mechanicRepository.findByEmail(request.getEmail());
+                if (mechanicOpt.isPresent() && mechanicOpt.get().getPassword().equals(request.getPassword())) {
+                    found = true;
+                    nic = mechanicOpt.get().getNic();
+                }
+                break;
+            case "ADMIN":
+                Optional<Admin> adminOpt = adminRepository.findByEmail(request.getEmail());
+                if (adminOpt.isPresent() && adminOpt.get().getPassword().equals(request.getPassword())) {
+                    found = true;
+                    nic = adminOpt.get().getNic();
+                }
+                break;
+            default:
+                return ResponseEntity.badRequest().body(Map.of("error", "Invalid role"));
+        }
+
+        if (found) {
+            // In production, generate a real JWT token here
+            Map<String, String> response = new HashMap<>();
+            response.put("nic", nic);
+            response.put("role", role);
+            response.put("token", "mock-jwt-token-" + nic); // Replace with real JWT
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid credentials"));
+        }
+    }
+
     // DTO for request body
     public static class RegisterUserRequest {
         private String nic;
@@ -162,6 +225,36 @@ public class UserController {
         public void setLastName(String lastName) {
             this.lastName = lastName;
         }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+
+        public String getRole() {
+            return role;
+        }
+
+        public void setRole(String role) {
+            this.role = role;
+        }
+    }
+
+    public static class LoginRequest {
+        private String email;
+        private String password;
+        private String role;
 
         public String getEmail() {
             return email;
