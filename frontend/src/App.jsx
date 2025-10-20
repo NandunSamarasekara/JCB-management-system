@@ -9,15 +9,10 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import CustomerDashboard from './pages/CustomerDashboard';
 import PaymentPage from './pages/PaymentPage';
+import AdminDashboard from './pages/AdminDashboard';
+import OwnerDashboard from './pages/OwnerDashboard';
 
 // Placeholder dashboards for other roles
-const AdminDashboard = () => (
-  <div className="p-8">
-    <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-    <p>Admin features coming soon...</p>
-  </div>
-);
-
 const DriverDashboard = () => (
   <div className="p-8">
     <h1 className="text-3xl font-bold">Driver Dashboard</h1>
@@ -29,13 +24,6 @@ const MechanicDashboard = () => (
   <div className="p-8">
     <h1 className="text-3xl font-bold">Mechanic Dashboard</h1>
     <p>Mechanic features coming soon...</p>
-  </div>
-);
-
-const OwnerDashboard = () => (
-  <div className="p-8">
-    <h1 className="text-3xl font-bold">Owner Dashboard</h1>
-    <p>Owner features coming soon...</p>
   </div>
 );
 

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { bookingAPI, jcbAPI } from '../services/api';
+import { bookingAPI, jcbAPI, reviewAPI } from '../services/api';
 import Layout from '../components/Layout';
+import AddReviewModal from '../components/AddReviewModal';
 
 const CustomerDashboard = () => {
   const { user } = useAuth();
@@ -14,6 +15,9 @@ const CustomerDashboard = () => {
   const [availableJCBs, setAvailableJCBs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [selectedBookingForReview, setSelectedBookingForReview] = useState(null);
+  const [myReviews, setMyReviews] = useState([]);
 
   const [bookingData, setBookingData] = useState({
     customerNic: user?.nic || '',
@@ -27,6 +31,7 @@ const CustomerDashboard = () => {
   useEffect(() => {
     fetchCustomerBookings();
     fetchAvailableJCBs();
+    fetchMyReviews();
   }, []);
 
   const fetchCustomerBookings = async () => {
@@ -47,6 +52,28 @@ const CustomerDashboard = () => {
     } catch (error) {
       console.error('Error fetching JCBs:', error);
     }
+  };
+
+  const fetchMyReviews = async () => {
+    try {
+      if (user?.nic) {
+        const data = await reviewAPI.getCustomerReviews(user.nic);
+        setMyReviews(data);
+      }
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    }
+  };
+
+  const handleAddReview = (booking) => {
+    setSelectedBookingForReview(booking);
+    setShowReviewModal(true);
+  };
+
+  const handleReviewSuccess = () => {
+    setMessage({ type: 'success', text: 'Review submitted successfully!' });
+    fetchMyReviews();
+    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
   };
 
   const handleInputChange = (e) => {
@@ -419,6 +446,9 @@ const CustomerDashboard = () => {
                       Driver
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Payment
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -442,23 +472,109 @@ const CustomerDashboard = () => {
                         {booking.driverEmail}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                          booking.paymentStatus === 'COMPLETED' 
+                            ? 'bg-green-100 text-green-800'
+                            : booking.paymentStatus === 'PENDING'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {booking.paymentStatus || 'PENDING'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
                         <button
                           onClick={() => handleEditBooking(booking)}
-                          className="text-blue-600 hover:text-blue-800 mr-3"
+                          className="text-blue-600 hover:text-blue-800"
                         >
-                          Edit
+                          ✏️ Edit
                         </button>
                         <button
                           onClick={() => handleCancelBooking(booking.id)}
                           className="text-red-600 hover:text-red-800"
                         >
-                          Cancel
+                          ❌ Cancel
+                        </button>
+                        <button
+                          onClick={() => handleAddReview(booking)}
+                          className="text-green-600 hover:text-green-800 font-semibold"
+                        >
+                          ⭐ Review
                         </button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+        </div>
+
+        {/* My Reviews Section */}
+        <div className="bg-white rounded-lg shadow-lg p-6 mt-6">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">My Reviews</h2>
+          
+          {myReviews.length === 0 ? (
+            <p className="text-gray-600">You haven't submitted any reviews yet.</p>
+          ) : (
+            <div className="space-y-4">
+              {myReviews.map(review => (
+                <div key={review.id} className="border rounded-lg p-4 bg-gray-50">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <span className="font-semibold text-gray-700">Booking #{review.bookingId}</span>
+                      <span className="ml-3 text-sm text-gray-500">
+                        {new Date(review.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <span className={`px-3 py-1 rounded text-xs font-semibold ${
+                      review.reviewType === 'SERVICE_REVIEW'
+                        ? 'bg-blue-100 text-blue-800'
+                        : review.reviewType === 'FEEDBACK'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {review.reviewType}
+                    </span>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-3 gap-4 mt-3">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-600">Overall Rating</p>
+                      <p className="text-yellow-500 text-lg">
+                        {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                      </p>
+                      {review.comment && (
+                        <p className="text-sm text-gray-600 mt-1">{review.comment}</p>
+                      )}
+                    </div>
+                    
+                    {review.driverRating && (
+                      <div>
+                        <p className="text-sm font-semibold text-gray-600">Driver Rating</p>
+                        <p className="text-yellow-500 text-lg">
+                          {'★'.repeat(review.driverRating)}{'☆'.repeat(5 - review.driverRating)}
+                        </p>
+                        {review.driverComment && (
+                          <p className="text-sm text-gray-600 mt-1">{review.driverComment}</p>
+                        )}
+                      </div>
+                    )}
+                    
+                    {review.jcbRating && (
+                      <div>
+                        <p className="text-sm font-semibold text-gray-600">JCB Rating</p>
+                        <p className="text-yellow-500 text-lg">
+                          {'★'.repeat(review.jcbRating)}{'☆'.repeat(5 - review.jcbRating)}
+                        </p>
+                        {review.jcbComment && (
+                          <p className="text-sm text-gray-600 mt-1">{review.jcbComment}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -512,6 +628,19 @@ const CustomerDashboard = () => {
           )}
         </div>
       </div>
+
+      {/* Review Modal */}
+      {showReviewModal && selectedBookingForReview && (
+        <AddReviewModal
+          booking={selectedBookingForReview}
+          user={user}
+          onClose={() => {
+            setShowReviewModal(false);
+            setSelectedBookingForReview(null);
+          }}
+          onSuccess={handleReviewSuccess}
+        />
+      )}
     </Layout>
   );
 };
