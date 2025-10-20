@@ -14,6 +14,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/jcbs")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"}, allowCredentials = "true")
 public class JCBController {
 
     @Autowired
@@ -28,6 +29,21 @@ public class JCBController {
     @GetMapping("/available")
     public List<JCB> getAvailableJCBs() {
         return bookingService.getAvailableJCBs();
+    }
+
+    @GetMapping
+    public List<JCB> getAllJCBs() {
+        return jcbRepository.findAll();
+    }
+
+    @GetMapping("/owner/{ownerNic}")
+    public ResponseEntity<List<JCB>> getJCBsByOwner(@PathVariable String ownerNic) {
+        Optional<Owner> ownerOpt = ownerRepository.findById(ownerNic);
+        if (!ownerOpt.isPresent()) {
+            return ResponseEntity.badRequest().build();
+        }
+        List<JCB> ownerJcbs = jcbRepository.findByOwner(ownerOpt.get());
+        return ResponseEntity.ok(ownerJcbs);
     }
 
     @PostMapping
@@ -54,6 +70,21 @@ public class JCBController {
         JCB savedJcb = jcbRepository.save(jcb);
         System.out.println("Saved isAvailable: " + savedJcb.isAvailable()); // Debug log
         return ResponseEntity.ok("Success: JCB added with registered number " + request.getRegisteredNumber());
+    }
+
+    @PutMapping("/{registeredNumber}/availability")
+    public ResponseEntity<String> updateJCBAvailability(
+            @PathVariable String registeredNumber,
+            @RequestBody UpdateAvailabilityRequest request) {
+        Optional<JCB> jcbOpt = jcbRepository.findById(registeredNumber);
+        if (!jcbOpt.isPresent()) {
+            return ResponseEntity.badRequest().body("Error: JCB with registered number " + registeredNumber + " not found");
+        }
+        
+        JCB jcb = jcbOpt.get();
+        jcb.setAvailable(request.getIsAvailable());
+        jcbRepository.save(jcb);
+        return ResponseEntity.ok("Success: JCB availability updated");
     }
 
     // DTO for request body
@@ -111,6 +142,18 @@ public class JCBController {
 
         public void setOwnerNic(String ownerNic) {
             this.ownerNic = ownerNic;
+        }
+    }
+
+    public static class UpdateAvailabilityRequest {
+        private Boolean isAvailable;
+
+        public Boolean getIsAvailable() {
+            return isAvailable;
+        }
+
+        public void setIsAvailable(Boolean isAvailable) {
+            this.isAvailable = isAvailable;
         }
     }
 }

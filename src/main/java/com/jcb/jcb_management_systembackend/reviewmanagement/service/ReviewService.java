@@ -60,6 +60,54 @@ public class ReviewService {
         return "Success: Review submitted successfully";
     }
 
+    public String createReviewWithDetails(String customerId, Long bookingId, Integer rating, String comment, 
+                                         Review.ReviewType reviewType, Integer driverRating, String driverComment,
+                                         Integer jcbRating, String jcbComment) {
+        // Validate inputs
+        if (rating == null || rating < 1 || rating > 5) {
+            return "Error: Overall rating must be between 1 and 5";
+        }
+        
+        if (driverRating != null && (driverRating < 1 || driverRating > 5)) {
+            return "Error: Driver rating must be between 1 and 5";
+        }
+        
+        if (jcbRating != null && (jcbRating < 1 || jcbRating > 5)) {
+            return "Error: JCB rating must be between 1 and 5";
+        }
+
+        // Check if customer exists
+        if (!customerRepository.existsById(customerId)) {
+            return "Error: Customer with NIC " + customerId + " not found";
+        }
+
+        // Check if booking exists and belongs to customer
+        Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
+        if (!bookingOpt.isPresent()) {
+            return "Error: Booking with ID " + bookingId + " not found";
+        }
+
+        Booking booking = bookingOpt.get();
+        if (!booking.getCustomerId().equals(customerId)) {
+            return "Error: Booking does not belong to this customer";
+        }
+
+        // Check if customer has already reviewed this booking
+        if (reviewRepository.existsByCustomerIdAndBookingId(customerId, bookingId)) {
+            return "Error: You have already reviewed this booking";
+        }
+
+        // Create new review with details
+        Review review = new Review(customerId, bookingId, rating, comment, reviewType);
+        review.setDriverRating(driverRating);
+        review.setDriverComment(driverComment);
+        review.setJcbRating(jcbRating);
+        review.setJcbComment(jcbComment);
+        reviewRepository.save(review);
+
+        return "Success: Review submitted successfully";
+    }
+
     public List<Review> getReviewsByCustomer(String customerId) {
         return reviewRepository.findByCustomerId(customerId);
     }

@@ -1,5 +1,6 @@
 package com.jcb.jcb_management_systembackend.jcbmanagement.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.jcb.jcb_management_systembackend.bookingmanagement.model.Booking;
 import com.jcb.jcb_management_systembackend.usermanagement.model.Owner;
 import jakarta.persistence.*;
@@ -29,11 +30,13 @@ public class JCB {
     @Column(name = "is_available", columnDefinition = "TINYINT DEFAULT 1")
     private Boolean isAvailable;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "owner_nic")
+    @JsonIgnoreProperties({"jcbs", "password"})
     private Owner owner;
 
     @OneToMany(mappedBy = "jcb")
+    @JsonIgnoreProperties({"customer", "jcb", "driver", "owner"})
     private List<Booking> bookings;
 
     public String getRegisteredNumber() {

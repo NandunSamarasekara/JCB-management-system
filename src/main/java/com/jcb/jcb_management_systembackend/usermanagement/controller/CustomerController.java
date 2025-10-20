@@ -37,7 +37,7 @@ public class CustomerController {
                 request.isAcceptPrice(),
                 request.isAcceptTerms(),
                 request.getPaymentMethod()
-        );
+        );//tend
         if (result.startsWith("Success")) {
             return ResponseEntity.ok(result);
         } else {

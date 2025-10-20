@@ -11,7 +11,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reviews")
-@CrossOrigin(origins = "http://localhost:5173", methods = {org.springframework.web.bind.annotation.RequestMethod.GET, org.springframework.web.bind.annotation.RequestMethod.POST, org.springframework.web.bind.annotation.RequestMethod.PUT, org.springframework.web.bind.annotation.RequestMethod.DELETE, org.springframework.web.bind.annotation.RequestMethod.OPTIONS})
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"}, allowCredentials = "true")
 public class ReviewController {
 
     @Autowired
@@ -19,12 +19,16 @@ public class ReviewController {
 
     @PostMapping
     public ResponseEntity<String> createReview(@RequestBody CreateReviewRequest request) {
-        String result = reviewService.createReview(
+        String result = reviewService.createReviewWithDetails(
             request.getCustomerId(),
             request.getBookingId(),
             request.getRating(),
             request.getComment(),
-            request.getReviewType()
+            request.getReviewType(),
+            request.getDriverRating(),
+            request.getDriverComment(),
+            request.getJcbRating(),
+            request.getJcbComment()
         );
         
         if (result.startsWith("Success")) {
@@ -105,6 +109,10 @@ public class ReviewController {
         private Integer rating;
         private String comment;
         private Review.ReviewType reviewType;
+        private Integer driverRating;
+        private String driverComment;
+        private Integer jcbRating;
+        private String jcbComment;
 
         public String getCustomerId() {
             return customerId;
@@ -144,6 +152,38 @@ public class ReviewController {
 
         public void setReviewType(Review.ReviewType reviewType) {
             this.reviewType = reviewType;
+        }
+
+        public Integer getDriverRating() {
+            return driverRating;
+        }
+
+        public void setDriverRating(Integer driverRating) {
+            this.driverRating = driverRating;
+        }
+
+        public String getDriverComment() {
+            return driverComment;
+        }
+
+        public void setDriverComment(String driverComment) {
+            this.driverComment = driverComment;
+        }
+
+        public Integer getJcbRating() {
+            return jcbRating;
+        }
+
+        public void setJcbRating(Integer jcbRating) {
+            this.jcbRating = jcbRating;
+        }
+
+        public String getJcbComment() {
+            return jcbComment;
+        }
+
+        public void setJcbComment(String jcbComment) {
+            this.jcbComment = jcbComment;
         }
     }
 

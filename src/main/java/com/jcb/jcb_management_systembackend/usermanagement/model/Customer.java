@@ -1,5 +1,6 @@
 package com.jcb.jcb_management_systembackend.usermanagement.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.jcb.jcb_management_systembackend.bookingmanagement.model.Booking;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -29,6 +30,7 @@ public class Customer {
     private String password;
 
     @OneToMany(mappedBy = "customer")
+    @JsonIgnoreProperties({"customer", "jcb", "driver", "owner"})
     private List<Booking> bookings;
 
     public String getNic() {

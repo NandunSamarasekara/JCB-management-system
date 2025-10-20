@@ -1,5 +1,6 @@
 package com.jcb.jcb_management_systembackend.usermanagement.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.jcb.jcb_management_systembackend.jcbmanagement.model.JCB;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -33,6 +34,7 @@ public class Owner {
     private Double monthlyFee; // Monthly subscription fee in LKR
 
     @OneToMany(mappedBy = "owner")
+    @JsonIgnoreProperties({"owner", "bookings"})
     private List<JCB> jcbs;
 
     public String getNic() {

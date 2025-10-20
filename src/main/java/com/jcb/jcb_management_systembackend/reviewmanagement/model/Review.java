@@ -32,6 +32,16 @@ public class Review {
     @Column(length = 1000)
     private String comment;
 
+    private Integer driverRating; // Rating for driver (1-5)
+    
+    @Column(length = 500)
+    private String driverComment; // Comment about driver service
+    
+    private Integer jcbRating; // Rating for JCB equipment (1-5)
+    
+    @Column(length = 500)
+    private String jcbComment; // Comment about JCB condition/performance
+
     @Enumerated(EnumType.STRING)
     @NotNull(message = "Review type cannot be null")
     private ReviewType reviewType;
@@ -135,5 +145,37 @@ public class Review {
 
     public void setBooking(Booking booking) {
         this.booking = booking;
+    }
+
+    public Integer getDriverRating() {
+        return driverRating;
+    }
+
+    public void setDriverRating(Integer driverRating) {
+        this.driverRating = driverRating;
+    }
+
+    public String getDriverComment() {
+        return driverComment;
+    }
+
+    public void setDriverComment(String driverComment) {
+        this.driverComment = driverComment;
+    }
+
+    public Integer getJcbRating() {
+        return jcbRating;
+    }
+
+    public void setJcbRating(Integer jcbRating) {
+        this.jcbRating = jcbRating;
+    }
+
+    public String getJcbComment() {
+        return jcbComment;
+    }
+
+    public void setJcbComment(String jcbComment) {
+        this.jcbComment = jcbComment;
     }
 }

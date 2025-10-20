@@ -1,5 +1,6 @@
 package com.jcb.jcb_management_systembackend.bookingmanagement.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.jcb.jcb_management_systembackend.jcbmanagement.model.JCB;
 import com.jcb.jcb_management_systembackend.usermanagement.model.Customer;
 import com.jcb.jcb_management_systembackend.usermanagement.model.Driver;
@@ -55,20 +56,24 @@ public class Booking {
 
     private Date createdAt;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "customer_id", insertable = false, updatable = false)
+    @JsonIgnoreProperties({"bookings", "password"})
     private Customer customer;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "jcb_id", insertable = false, updatable = false)
+    @JsonIgnoreProperties({"bookings", "owner"})
     private JCB jcb;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "driver_id", insertable = false, updatable = false)
+    @JsonIgnoreProperties({"bookings", "password"})
     private Driver driver;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "owner_id", insertable = false, updatable = false)
+    @JsonIgnoreProperties({"bookings", "jcbs", "password"})
     private Owner owner;
 
     public Long getId() {
