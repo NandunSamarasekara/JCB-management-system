@@ -8,10 +8,17 @@ import com.jcb.jcb_management_systembackend.bookingmanagement.repository.Booking
 import com.jcb.jcb_management_systembackend.jcbmanagement.repository.JCBRepository;
 import com.jcb.jcb_management_systembackend.usermanagement.repository.CustomerRepository;
 import com.jcb.jcb_management_systembackend.usermanagement.repository.DriverRepository;
+import com.jcb.jcb_management_systembackend.bookingmanagement.stratergy.CashPayment;
+import com.jcb.jcb_management_systembackend.bookingmanagement.stratergy.CreditCardPayment;
+import com.jcb.jcb_management_systembackend.bookingmanagement.stratergy.PayPalPayment;
+import com.jcb.jcb_management_systembackend.bookingmanagement.stratergy.PaymentStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -31,14 +38,23 @@ public class BookingService {
     @Autowired
     private DriverRepository driverRepository;
 
+    private PaymentStrategy paymentStrategy;  // Strategy for payment processing
+
+    public void setPaymentStrategy(PaymentStrategy paymentStrategy) {
+        this.paymentStrategy = paymentStrategy;
+    }
+
     @Transactional
-    public String createBooking(String customerNic, String jcbType, Date rentalDate, Date returnDate, boolean acceptPrice, boolean acceptTerms) {
+    public String createBooking(String customerNic, String jcbType, Date rentalDate, Date returnDate, boolean acceptPrice, boolean acceptTerms, String paymentMethod) {
         // Validate form inputs
         if (!acceptPrice || !acceptTerms) {
             return "Error: Price and terms must be accepted";
         }
         if (rentalDate == null || returnDate == null || rentalDate.after(returnDate)) {
             return "Error: Invalid rental or return date";
+        }
+        if (paymentMethod == null || paymentMethod.isEmpty()) {
+            return "Error: Payment method must be selected";
         }
 
         // Find the customer
@@ -62,6 +78,33 @@ public class BookingService {
         }
         Driver selectedDriver = availableDrivers.get(0); // Select the first available driver
 
+        // Calculate total amount (assume rentalPrice is per day)
+        LocalDate rentalLocal = rentalDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate returnLocal = returnDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        long days = ChronoUnit.DAYS.between(rentalLocal, returnLocal) + 1;
+        double totalAmount = selectedJcb.getRentalPrice() * days;
+
+        // Set strategy based on paymentMethod (using Strategy Pattern to avoid if-else chains for processing)
+        switch (paymentMethod.toLowerCase()) {
+            case "credit_card":
+                setPaymentStrategy(new CreditCardPayment());
+                break;
+            case "paypal":
+                setPaymentStrategy(new PayPalPayment());
+                break;
+            case "cash":
+                setPaymentStrategy(new CashPayment());
+                break;
+            default:
+                return "Error: Invalid payment method";
+        }
+
+        // Process payment using the selected strategy
+        String paymentResult = paymentStrategy.processPayment(totalAmount);
+        if (paymentResult.contains("Error")) {  // Simulate failure check
+            return paymentResult;
+        }
+
         // Create a new booking
         Booking booking = new Booking();
         booking.setCustomerId(customerNic);
@@ -77,6 +120,9 @@ public class BookingService {
         booking.setJcb(selectedJcb);
         booking.setDriver(selectedDriver);
         booking.setOwner(selectedJcb.getOwner());
+        booking.setPaymentMethod(paymentMethod.toUpperCase());
+        booking.setTotalAmount(totalAmount);
+        booking.setPaymentStatus("COMPLETED"); // Mark as completed after payment processing
 
         // Mark the JCB and driver as unavailable
         selectedJcb.setAvailable(false);
@@ -87,10 +133,108 @@ public class BookingService {
         // Save the booking
         bookingRepository.save(booking);
 
-        return "Success: Booking created for JCB " + selectedJcb.getRegisteredNumber() + " (Type: " + jcbType + ", Price: " + selectedJcb.getRentalPrice() + ") with Driver NIC: " + selectedDriver.getNic();
+        return "Success: Booking created for JCB " + selectedJcb.getRegisteredNumber() + " (Type: " + jcbType + ", Total Price: LKR " + totalAmount + "). " + paymentResult;
     }
 
     public List<JCB> getAvailableJCBs() {
         return jcbRepository.findByIsAvailableTrue();
     }
+
+    public List<Booking> getBookingsByCustomer(String customerNic) {
+        return bookingRepository.findByCustomerId(customerNic);
+    }
+
+    @Transactional
+    public boolean deleteBooking(Long bookingId) {
+        Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
+        if (!bookingOpt.isPresent()) {
+            return false;
+        }
+
+        Booking booking = bookingOpt.get();
+        
+        // Make the JCB and driver available again
+        JCB jcb = booking.getJcb();
+        if (jcb != null) {
+            jcb.setAvailable(true);
+            jcbRepository.save(jcb);
+        }
+
+        Driver driver = booking.getDriver();
+        if (driver != null) {
+            driver.setAvailable(true);
+            driverRepository.save(driver);
+        }
+
+        // Delete the booking
+        bookingRepository.deleteById(bookingId);
+        return true;
+    }
+
+    @Transactional
+    public String updateBooking(Long bookingId, String newJcbType, Date newRentalDate, Date newReturnDate) {
+        // Validate dates
+        if (newRentalDate == null || newReturnDate == null || newRentalDate.after(newReturnDate)) {
+            return "Error: Invalid rental or return date";
+        }
+
+        // Find the existing booking
+        Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
+        if (!bookingOpt.isPresent()) {
+            return "Error: Booking not found";
+        }
+
+        Booking booking = bookingOpt.get();
+        JCB currentJcb = booking.getJcb();
+        Driver currentDriver = booking.getDriver();
+        String currentJcbType = currentJcb != null ? currentJcb.getJcbType() : "";
+
+        // Check if JCB type is changing
+        boolean jcbTypeChanged = newJcbType != null && !newJcbType.equals(currentJcbType);
+
+        if (jcbTypeChanged) {
+            // Need to find a new JCB of the new type
+            List<JCB> availableJcbs = jcbRepository.findByJcbTypeAndIsAvailableTrue(newJcbType);
+            if (availableJcbs.isEmpty()) {
+                return "Error: No available JCBs of type " + newJcbType;
+            }
+
+            JCB newJcb = availableJcbs.get(0);
+
+            // Make the old JCB available again
+            if (currentJcb != null) {
+                currentJcb.setAvailable(true);
+                jcbRepository.save(currentJcb);
+            }
+
+            // Assign the new JCB
+            booking.setJcbId(newJcb.getRegisteredNumber());
+            booking.setJcb(newJcb);
+            booking.setOwnerId(newJcb.getOwner().getNic());
+            booking.setOwnerEmail(newJcb.getOwner().getEmail());
+            booking.setOwner(newJcb.getOwner());
+
+            // Mark the new JCB as unavailable
+            newJcb.setAvailable(false);
+            jcbRepository.save(newJcb);
+        }
+
+        // Update dates
+        booking.setRentalDate(newRentalDate);
+        booking.setReturnDate(newReturnDate);
+
+        // Save the updated booking
+        bookingRepository.save(booking);
+
+        // Calculate new total amount
+        JCB finalJcb = booking.getJcb();
+        LocalDate rentalLocal = newRentalDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate returnLocal = newReturnDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        long days = ChronoUnit.DAYS.between(rentalLocal, returnLocal) + 1;
+        double totalAmount = finalJcb != null ? finalJcb.getRentalPrice() * days : 0;
+
+        return "Success: Booking updated successfully. New total price: " + totalAmount;
+    }
+
+
 }

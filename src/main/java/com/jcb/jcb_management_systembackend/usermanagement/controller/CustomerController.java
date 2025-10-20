@@ -10,7 +10,8 @@ import java.util.Date;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/customer")
+@RequestMapping("/dashboard/customer")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"}, allowCredentials = "true")
 public class CustomerController {
 
     @Autowired
@@ -34,7 +35,8 @@ public class CustomerController {
                 request.getRentalDate(),
                 request.getReturnDate(),
                 request.isAcceptPrice(),
-                request.isAcceptTerms()
+                request.isAcceptTerms(),
+                request.getPaymentMethod()
         );
         if (result.startsWith("Success")) {
             return ResponseEntity.ok(result);
@@ -51,6 +53,7 @@ public class CustomerController {
         private Date returnDate;
         private boolean acceptPrice;
         private boolean acceptTerms;
+        private String paymentMethod;
 
         public String getCustomerNic() {
             return customerNic;
@@ -98,6 +101,14 @@ public class CustomerController {
 
         public void setAcceptTerms(boolean acceptTerms) {
             this.acceptTerms = acceptTerms;
+        }
+
+        public String getPaymentMethod() {
+            return paymentMethod;
+        }
+
+        public void setPaymentMethod(String paymentMethod) {
+            this.paymentMethod = paymentMethod;
         }
     }
 }

@@ -47,6 +47,12 @@ public class Booking {
     @NotNull(message = "Return date cannot be null")
     private Date returnDate;
 
+    private String paymentMethod; // CASH, CREDIT_CARD, PAYPAL
+    
+    private Double totalAmount; // Total amount in LKR
+    
+    private String paymentStatus; // PENDING, COMPLETED, FAILED
+
     private Date createdAt;
 
     @ManyToOne
@@ -185,10 +191,37 @@ public class Booking {
         this.owner = owner;
     }
 
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public Double getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(Double totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
+    public String getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(String paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+
     @PrePersist
     public void prePersist() {
         if (createdAt == null) {
             createdAt = new Date();
+        }
+        if (paymentStatus == null) {
+            paymentStatus = "PENDING";
         }
     }
 }

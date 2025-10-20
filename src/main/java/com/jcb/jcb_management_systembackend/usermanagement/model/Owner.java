@@ -28,6 +28,10 @@ public class Owner {
     @NotNull(message = "Password cannot be null")
     private String password;
 
+    private String subscriptionPlan; // BASIC, NORMAL, PREMIUM
+    
+    private Double monthlyFee; // Monthly subscription fee in LKR
+
     @OneToMany(mappedBy = "owner")
     private List<JCB> jcbs;
 
@@ -77,5 +81,29 @@ public class Owner {
 
     public void setJcbs(List<JCB> jcbs) {
         this.jcbs = jcbs;
+    }
+
+    public String getSubscriptionPlan() {
+        return subscriptionPlan;
+    }
+
+    public void setSubscriptionPlan(String subscriptionPlan) {
+        this.subscriptionPlan = subscriptionPlan;
+        // Set monthly fee based on plan
+        if ("BASIC".equals(subscriptionPlan)) {
+            this.monthlyFee = 0.0;
+        } else if ("NORMAL".equals(subscriptionPlan)) {
+            this.monthlyFee = 500.0;
+        } else if ("PREMIUM".equals(subscriptionPlan)) {
+            this.monthlyFee = 750.0;
+        }
+    }
+
+    public Double getMonthlyFee() {
+        return monthlyFee;
+    }
+
+    public void setMonthlyFee(Double monthlyFee) {
+        this.monthlyFee = monthlyFee;
     }
 }

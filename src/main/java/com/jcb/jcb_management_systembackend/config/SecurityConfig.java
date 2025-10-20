@@ -10,9 +10,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> cors.configure(http)) // Enable CORS
                 .csrf(csrf -> csrf.disable()) // Disable CSRF for testing (not for production)
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/**").permitAll() // Allow all requests to /api/** without authentication
+                        .requestMatchers("/api/**", "/dashboard/**").permitAll() // Allow all requests to /api/** and /dashboard/** without authentication
                         .anyRequest().authenticated()
                 );
         return http.build();
