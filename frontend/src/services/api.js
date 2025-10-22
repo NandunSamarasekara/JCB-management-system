@@ -142,4 +142,47 @@ export const adminAPI = {
   }
 };
 
+// Maintenance APIs
+export const maintenanceAPI = {
+  createMaintenance: async (maintenanceData) => {
+    const response = await api.post('/api/maintenance', maintenanceData);
+    return response.data;
+  },
+  
+  getAllMaintenance: async () => {
+    const response = await api.get('/api/maintenance/all');
+    return response.data;
+  },
+  
+  getDriverMaintenance: async (driverId) => {
+    const response = await api.get(`/api/maintenance/driver/${driverId}`);
+    return response.data;
+  },
+  
+  getMechanicMaintenance: async (mechanicId) => {
+    const response = await api.get(`/api/maintenance/mechanic/${mechanicId}`);
+    return response.data;
+  },
+  
+  getOwnerMaintenance: async (ownerId) => {
+    const response = await api.get(`/api/maintenance/owner/${ownerId}`);
+    return response.data;
+  },
+  
+  getJcbMaintenance: async (jcbId) => {
+    const response = await api.get(`/api/maintenance/jcb/${jcbId}`);
+    return response.data;
+  },
+  
+  updateMaintenance: async (id, updateData) => {
+    const response = await api.put(`/api/maintenance/${id}`, updateData);
+    return response.data;
+  },
+  
+  deleteMaintenance: async (id) => {
+    const response = await api.delete(`/api/maintenance/${id}`);
+    return response.data;
+  }
+};
+
 export default api;

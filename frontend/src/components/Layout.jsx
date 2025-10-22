@@ -14,7 +14,7 @@ const Layout = ({ children }) => {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Navigation Bar */}
-      <nav className="bg-blue-600 text-white shadow-lg">
+      <nav className="bg-yellow-400 text-black shadow-lg">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center py-4">
             <Link to="/" className="text-2xl font-bold">

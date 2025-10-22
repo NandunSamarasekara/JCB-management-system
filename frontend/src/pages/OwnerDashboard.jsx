@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { jcbAPI } from '../services/api';
+import { jcbAPI, maintenanceAPI } from '../services/api';
 import Layout from '../components/Layout';
 import AddJCBModal from '../components/AddJCBModal';
 
 const OwnerDashboard = () => {
   const { user } = useAuth();
   const [jcbs, setJcbs] = useState([]);
+  const [maintenance, setMaintenance] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showAddJCBModal, setShowAddJCBModal] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
     fetchOwnerJCBs();
+    fetchOwnerMaintenance();
   }, []);
 
   const fetchOwnerJCBs = async () => {
@@ -27,6 +29,17 @@ const OwnerDashboard = () => {
       setMessage({ type: 'error', text: 'Failed to fetch JCBs' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchOwnerMaintenance = async () => {
+    try {
+      if (user?.nic) {
+        const data = await maintenanceAPI.getOwnerMaintenance(user.nic);
+        setMaintenance(data);
+      }
+    } catch (error) {
+      console.error('Error fetching maintenance records:', error);
     }
   };
 
@@ -66,6 +79,38 @@ const OwnerDashboard = () => {
     return icons[plan] || '📦';
   };
 
+  const getIssueIcon = (issueType) => {
+    const icons = {
+      'ENGINE': '⚙️',
+      'HYDRAULIC': '💧',
+      'ELECTRICAL': '⚡',
+      'STRUCTURAL': '🔧',
+      'OTHER': '🛠️'
+    };
+    return icons[issueType] || '🛠️';
+  };
+
+  const getStatusBadge = (status) => {
+    const badges = {
+      'PENDING': 'bg-gray-100 text-gray-800',
+      'ASSIGNED': 'bg-blue-100 text-blue-800',
+      'IN_PROGRESS': 'bg-yellow-100 text-yellow-800',
+      'COMPLETED': 'bg-green-100 text-green-800',
+      'CANCELLED': 'bg-red-100 text-red-800'
+    };
+    return badges[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getSeverityBadge = (severity) => {
+    const badges = {
+      'LOW': 'bg-green-100 text-green-800',
+      'MEDIUM': 'bg-yellow-100 text-yellow-800',
+      'HIGH': 'bg-orange-100 text-orange-800',
+      'CRITICAL': 'bg-red-100 text-red-800'
+    };
+    return badges[severity] || 'bg-gray-100 text-gray-800';
+  };
+
   return (
     <Layout>
       <div className="max-w-7xl mx-auto">
@@ -94,7 +139,7 @@ const OwnerDashboard = () => {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-6">
+        <div className="grid md:grid-cols-4 gap-6 mb-6">
           <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
@@ -126,6 +171,16 @@ const OwnerDashboard = () => {
                 </p>
               </div>
               <div className="text-5xl opacity-50">📋</div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm">Maintenance Reports</p>
+                <p className="text-3xl font-bold mt-1">{maintenance.length}</p>
+              </div>
+              <div className="text-5xl opacity-50">🔧</div>
             </div>
           </div>
         </div>
@@ -227,6 +282,120 @@ const OwnerDashboard = () => {
                     >
                       {jcb.isAvailable ? '🔒 Mark as Rented' : '🔓 Mark as Available'}
                     </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Maintenance Records Section */}
+        <div className="bg-white rounded-lg shadow-lg p-6 mt-6">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <span>🔧</span> Maintenance Records ({maintenance.length})
+          </h2>
+
+          {maintenance.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">🔧</div>
+              <p className="text-gray-600 text-lg">No maintenance reports for your JCBs yet</p>
+              <p className="text-gray-500 text-sm mt-2">All maintenance requests will appear here</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {maintenance.map(record => (
+                <div key={record.id} className="border-2 border-gray-200 rounded-lg p-6 hover:shadow-md transition">
+                  {/* Header */}
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl">{getIssueIcon(record.issueType)}</span>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-800">
+                          {record.issueType} Issue - Report #{record.id}
+                        </h3>
+                        <p className="text-sm text-gray-600">JCB: {record.jcbId}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusBadge(record.status)}`}>
+                        {record.status}
+                      </span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${getSeverityBadge(record.severity)}`}>
+                        {record.severity}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                    <p className="text-sm font-semibold text-gray-700 mb-1">Problem Description:</p>
+                    <p className="text-gray-800">{record.description}</p>
+                  </div>
+
+                  {/* Details Grid */}
+                  <div className="grid md:grid-cols-3 gap-4 mb-4">
+                    {/* Assigned Mechanic */}
+                    {record.mechanic && (
+                      <div className="bg-blue-50 rounded-lg p-3">
+                        <p className="text-xs text-blue-600 font-semibold mb-1">👨‍🔧 Assigned Mechanic</p>
+                        <p className="text-sm font-bold text-gray-800">{record.mechanic.firstName} {record.mechanic.lastName}</p>
+                        <p className="text-xs text-gray-600">{record.mechanic.email}</p>
+                        <p className="text-xs text-gray-600">{record.mechanic.phone}</p>
+                      </div>
+                    )}
+
+                    {/* Driver Info */}
+                    {record.driver && (
+                      <div className="bg-green-50 rounded-lg p-3">
+                        <p className="text-xs text-green-600 font-semibold mb-1">🚗 Reported By</p>
+                        <p className="text-sm font-bold text-gray-800">{record.driver.firstName} {record.driver.lastName}</p>
+                        <p className="text-xs text-gray-600">{record.driver.email}</p>
+                        <p className="text-xs text-gray-600">{record.driver.phone}</p>
+                      </div>
+                    )}
+
+                    {/* JCB Details */}
+                    {record.jcb && (
+                      <div className="bg-yellow-50 rounded-lg p-3">
+                        <p className="text-xs text-yellow-600 font-semibold mb-1">🚜 JCB Details</p>
+                        <p className="text-sm font-bold text-gray-800">{record.jcb.jcbType}</p>
+                        <p className="text-xs text-gray-600">Reg: {record.jcb.registeredNumber}</p>
+                        <p className="text-xs text-gray-600">Engine: {record.jcb.engineNumber}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Mechanic Notes */}
+                  {record.mechanicNotes && (
+                    <div className="bg-purple-50 rounded-lg p-4 mb-4">
+                      <p className="text-sm font-semibold text-purple-700 mb-1">📝 Mechanic Notes:</p>
+                      <p className="text-gray-800">{record.mechanicNotes}</p>
+                    </div>
+                  )}
+
+                  {/* Timeline */}
+                  <div className="border-t pt-4">
+                    <p className="text-xs text-gray-500 mb-2 font-semibold">🕒 Timeline</p>
+                    <div className="flex flex-wrap gap-4 text-xs text-gray-600">
+                      {record.reportedDate && (
+                        <div>
+                          <span className="font-semibold">Reported:</span>{' '}
+                          {new Date(record.reportedDate).toLocaleString()}
+                        </div>
+                      )}
+                      {record.assignedDate && (
+                        <div>
+                          <span className="font-semibold">Assigned:</span>{' '}
+                          {new Date(record.assignedDate).toLocaleString()}
+                        </div>
+                      )}
+                      {record.completedDate && (
+                        <div>
+                          <span className="font-semibold text-green-600">Completed:</span>{' '}
+                          {new Date(record.completedDate).toLocaleString()}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

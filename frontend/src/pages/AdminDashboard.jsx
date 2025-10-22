@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { reviewAPI, adminAPI, jcbAPI } from '../services/api';
+import { reviewAPI, adminAPI, jcbAPI, maintenanceAPI } from '../services/api';
 import Layout from '../components/Layout';
 
 const AdminDashboard = () => {
@@ -16,6 +16,7 @@ const AdminDashboard = () => {
   const [jcbs, setJcbs] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [maintenance, setMaintenance] = useState([]);
   const [stats, setStats] = useState({ averageRating: 0, totalReviews: 0 });
 
   useEffect(() => {
@@ -25,7 +26,7 @@ const AdminDashboard = () => {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [customersData, driversData, mechanicsData, ownersData, jcbsData, bookingsData, reviewsData, statsData] = await Promise.all([
+      const [customersData, driversData, mechanicsData, ownersData, jcbsData, bookingsData, reviewsData, maintenanceData, statsData] = await Promise.all([
         adminAPI.getAllCustomers(),
         adminAPI.getAllDrivers(),
         adminAPI.getAllMechanics(),
@@ -33,6 +34,7 @@ const AdminDashboard = () => {
         jcbAPI.getAllJCBs(),
         adminAPI.getAllBookings(),
         reviewAPI.getAllReviews(),
+        maintenanceAPI.getAllMaintenance(),
         reviewAPI.getStats()
       ]);
       
@@ -43,6 +45,7 @@ const AdminDashboard = () => {
       setJcbs(jcbsData);
       setBookings(bookingsData);
       setReviews(reviewsData);
+      setMaintenance(maintenanceData);
       setStats(statsData);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -75,6 +78,7 @@ const AdminDashboard = () => {
     { id: 'owners', name: 'Owners', icon: '👔' },
     { id: 'jcbs', name: 'JCBs', icon: '🚜' },
     { id: 'bookings', name: 'Bookings', icon: '📋' },
+    { id: 'maintenance', name: 'Maintenance', icon: '🔧' },
     { id: 'reviews', name: 'Reviews', icon: '⭐' }
   ];
 
@@ -161,6 +165,29 @@ const AdminDashboard = () => {
                 <div className="text-4xl mb-2">📊</div>
                 <p className="text-teal-100 text-sm">Avg Rating</p>
                 <p className="text-3xl font-bold">{stats.averageRating.toFixed(1)}⭐</p>
+              </div>              
+            </div>
+
+            <div className="grid md:grid-cols-4 gap-4">
+              <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-lg p-6 text-white">
+                <div className="text-4xl mb-2">🛠️</div>
+                <p className="text-orange-100 text-sm">Maintenance Reports</p>
+                <p className="text-3xl font-bold">{maintenance.length}</p>
+              </div>
+              <div className="bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-lg shadow-lg p-6 text-white">
+                <div className="text-4xl mb-2">⏳</div>
+                <p className="text-cyan-100 text-sm">Pending Issues</p>
+                <p className="text-3xl font-bold">{maintenance.filter(m => m.status === 'PENDING' || m.status === 'ASSIGNED').length}</p>
+              </div>
+              <div className="bg-gradient-to-br from-lime-500 to-lime-600 rounded-lg shadow-lg p-6 text-white">
+                <div className="text-4xl mb-2">⚙️</div>
+                <p className="text-lime-100 text-sm">In Progress</p>
+                <p className="text-3xl font-bold">{maintenance.filter(m => m.status === 'IN_PROGRESS').length}</p>
+              </div>
+              <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg shadow-lg p-6 text-white">
+                <div className="text-4xl mb-2">✅</div>
+                <p className="text-emerald-100 text-sm">Completed</p>
+                <p className="text-3xl font-bold">{maintenance.filter(m => m.status === 'COMPLETED').length}</p>
               </div>
             </div>
 
@@ -401,6 +428,74 @@ const AdminDashboard = () => {
                       {review.jcbComment && <p className="text-sm text-gray-600 mt-1">{review.jcbComment}</p>}
                     </div>
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Maintenance Tab */}
+        {activeTab === 'maintenance' && !loading && (
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h2 className="text-2xl font-bold mb-4">All Maintenance Records ({maintenance.length})</h2>
+            <div className="space-y-4">
+              {maintenance.map(record => (
+                <div key={record.id} className="border-2 border-gray-200 rounded-lg p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="font-bold text-xl">Report #{record.id} - {record.issueType}</h3>
+                      <p className="text-sm text-gray-600">JCB: {record.jcbId} | Driver: {record.driverId}</p>
+                      <p className="text-xs text-gray-500">Reported: {formatDate(record.reportedDate)}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        record.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                        record.status === 'IN_PROGRESS' ? 'bg-yellow-100 text-yellow-800' :
+                        record.status === 'ASSIGNED' ? 'bg-blue-100 text-blue-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {record.status}
+                      </span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        record.severity === 'CRITICAL' ? 'bg-red-100 text-red-800' :
+                        record.severity === 'HIGH' ? 'bg-orange-100 text-orange-800' :
+                        record.severity === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {record.severity}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded mb-4">
+                    <p className="font-semibold text-gray-700 mb-2">Description:</p>
+                    <p className="text-gray-800">{record.description}</p>
+                  </div>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-600">Mechanic</p>
+                      <p className="text-sm text-gray-800">
+                        {record.mechanic ? `${record.mechanic.firstName} ${record.mechanic.lastName}` : 'Not assigned'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-600">Driver</p>
+                      <p className="text-sm text-gray-800">
+                        {record.driver ? `${record.driver.firstName} ${record.driver.lastName}` : record.driverId}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-600">Owner</p>
+                      <p className="text-sm text-gray-800">
+                        {record.owner ? `${record.owner.firstName} ${record.owner.lastName}` : record.ownerId || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                  {record.mechanicNotes && (
+                    <div className="mt-4 bg-yellow-50 border border-yellow-200 p-4 rounded">
+                      <p className="font-semibold text-gray-700 mb-1">Mechanic Notes:</p>
+                      <p className="text-sm text-gray-800">{record.mechanicNotes}</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

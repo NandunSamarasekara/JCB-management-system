@@ -11,15 +11,9 @@ import CustomerDashboard from './pages/CustomerDashboard';
 import PaymentPage from './pages/PaymentPage';
 import AdminDashboard from './pages/AdminDashboard';
 import OwnerDashboard from './pages/OwnerDashboard';
+import DriverDashboard from './pages/DriverDashboard';
 
 // Placeholder dashboards for other roles
-const DriverDashboard = () => (
-  <div className="p-8">
-    <h1 className="text-3xl font-bold">Driver Dashboard</h1>
-    <p>Driver features coming soon...</p>
-  </div>
-);
-
 const MechanicDashboard = () => (
   <div className="p-8">
     <h1 className="text-3xl font-bold">Mechanic Dashboard</h1>
